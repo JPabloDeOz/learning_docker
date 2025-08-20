@@ -7,4 +7,5 @@ RUN mkdir /app/nuevo_dir
 COPY nuevo.py /app/nuevo_dir/nuevo.py
 
 # CMD final
+#CMD ["sh","-c","ls /app && ls /app/nuevo_dir && cat /app/nuevo.py"]
 CMD ["sh","-c","ls /app && ls /app/nuevo_dir && cat /app/holaMundo.py"]
