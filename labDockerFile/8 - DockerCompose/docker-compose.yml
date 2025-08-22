@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  api:
+    build: ./api
+    container_name: api_service
+    ports:
+      - "5000:5000"
+    networks:
+      - red_principal
+
+  client:
+    build: ./client
+    container_name: client_service
+    depends_on:
+      - api
+    networks:
+      - red_principal
+
+  logger:
+    build: ./logger
+    container_name: logger_service
+    networks:
+      - red_principal
+
+networks:
+  red_principal:
+    driver: bridge
