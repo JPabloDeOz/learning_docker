@@ -1,0 +1,77 @@
+version: "3.9"
+
+services:
+  s1_customer:
+    build: ./s1_customer
+    container_name: s1_customer
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+      start_period: 5s
+
+  s2_pricing:
+    build: ./s2_pricing
+    container_name: s2_pricing
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+      start_period: 5s
+
+  s3_inventory:
+    build: ./s3_inventory
+    container_name: s3_inventory
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+      start_period: 5s
+
+  s4_token:
+    build: ./s4_token
+    container_name: s4_token
+    depends_on:
+      s1_customer:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+      start_period: 5s
+
+  s5_ticket:
+    build: ./s5_ticket
+    container_name: s5_ticket
+    depends_on:
+      s2_pricing:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+      start_period: 5s
+
+  s6_orchestrator:
+    build: ./s6_orchestrator
+    container_name: s6_orchestrator
+    depends_on:
+      s3_inventory:
+        condition: service_healthy
+      s4_token:
+        condition: service_healthy
+      s5_ticket:
+        condition: service_healthy
+    ports:
+      - "8080:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+      start_period: 5s

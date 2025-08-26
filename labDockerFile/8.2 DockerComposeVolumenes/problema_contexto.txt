@@ -1,0 +1,54 @@
+¡Buenísimo! Vamos a armar Modo web-service en Docker Compose con 6 contenedores que se hablan por HTTP (JSON).
+Patrón: 3 servicios base (independientes) → 2 servicios que dependen de ellos → 1 orquestador que llama a todos en orden y devuelve el resultado final.
+Cada servicio expone GET /health (para “OK”) y POST /process (para su chamba).
+--------------------------
+{
+  "id": 123,
+  "nombre": "Juan",
+  "edad": 30,
+  "producto": "Laptop",
+  "precio": 1200,
+  "descuento": 10,
+  "categoria": "Electrónica",
+  "stock": 5,
+  "pais": "MX",
+  "moneda": "USD"
+}
+----
+6 contenedores en total:
+
+Contenedores independientes (no dependen de otros)
+
+C1: usa id, nombre → valida el cliente.
+
+C2: usa producto, precio, descuento → calcula precio final.
+
+C3: usa categoria, stock → verifica inventario.
+
+Contenedores dependientes (usan resultados de los anteriores):
+
+C4: recibe datos procesados de C1 → genera un token de validación.
+
+C5: recibe datos procesados de C2 → genera un ticket de venta.
+
+C6: recibe datos de C3, C4, C5 → arma el resultado final (ejemplo: "Venta aprobada con ID: 123 y ticket: X").
+
+Regla de ejecución:
+
+Cada contenedor al terminar debe devolver "OK" (aunque su lógica sea trivial).
+
+El último (C6) devuelve el producto final.
+--------------------------
+s1_customer (independiente): valida datos del cliente (id, nombre).
+
+s2_pricing (independiente): calcula final_price = precio * (1 - descuento/100).
+
+s3_inventory (independiente): verifica in_stock con stock > 0.
+
+s4_token (depende de s1): genera un token si valid es True.
+
+s5_ticket (depende de s2): emite ticket usando id y final_price.
+
+s6_orchestrator (cliente orquestador): recibe el JSON maestro, llama a s1/s2/s3 → luego a s4 (con salida de s1) y s5 (con salida de s2) → combina todo y responde el resultado final.
+
+Todos deben responder "status": "OK" al terminar. El orquestador, además, te devuelve el producto final.
