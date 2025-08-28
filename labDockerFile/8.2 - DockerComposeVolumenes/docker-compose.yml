@@ -34,6 +34,8 @@ services:
   s4_token:
     build: ./s4_token
     container_name: s4_token
+    volumes:
+      - token_data:/data # es un volumen local de docker, es declarado por Volumes: token_data: (hasta abajo viene)
     depends_on:
       s1_customer:
         condition: service_healthy
@@ -75,3 +77,34 @@ services:
       timeout: 2s
       retries: 20
       start_period: 5s
+
+  s7_compra:
+    build: ./s7_compra
+    container_name: s7_compra
+    volumes:
+      - ./tickets:/app/tickets #al no hacer referencia y no ser referenciado es bind mount (osea local, ya que empeiza con ./ sabe que se trata de ruta local)
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+      start_period: 5s
+
+  s8_reader:
+    build: ./s8_reader
+    container_name: s8_reader
+    volumes:
+      - token_data:/data   # lee tokens de s4
+    ports:
+      - "8081:8000"
+    depends_on:
+      s7_compra:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+      start_period: 5s
+volumes:
+  token_data:
